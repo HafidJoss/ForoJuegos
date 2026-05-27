@@ -1,0 +1,257 @@
+/* ============================================================
+   Estilos para Selector de Juegos (GameSelector)
+   ============================================================ */
+
+.game-selector-container {
+  margin-bottom: 16px;
+}
+
+/* Input de búsqueda de juegos */
+.game-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #333;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.game-search-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  background-color: #fafafa;
+}
+
+.game-search-input:hover:not(:disabled) {
+  border-color: #b0b0b0;
+}
+
+.game-search-input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Contenedor del dropdown */
+.game-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: -6px;
+}
+
+/* Opción individual en el dropdown */
+.game-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.game-option:hover {
+  background-color: #f5f5f5;
+}
+
+.game-option:last-child {
+  border-bottom: none;
+}
+
+.game-option:active {
+  background-color: #ececec;
+}
+
+/* Thumbnail del juego en dropdown */
+.game-thumbnail {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  flex-shrink: 0;
+}
+
+/* Nombre del juego en dropdown */
+.game-name {
+  font-size: 0.9rem;
+  color: #333;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mensaje cuando no hay resultados */
+.game-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  background-color: #fafafa;
+}
+
+/* Juego seleccionado (mostrado después de elegir) */
+.game-selected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  background-color: #f0f4ff;
+  border: 1px solid #d1dff7;
+  border-radius: 6px;
+  background-image: linear-gradient(135deg, #f0f4ff 0%, #f9fbff 100%);
+}
+
+.selected-thumbnail {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #d1dff7;
+  flex-shrink: 0;
+}
+
+.game-selected > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selected-name {
+  margin: 0;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.btn-deselect {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  background-color: white;
+  color: #6366f1;
+  border: 1px solid #d1dff7;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-deselect:hover:not(:disabled) {
+  background-color: #f5f7ff;
+  border-color: #6366f1;
+  color: #4f46e5;
+}
+
+.btn-deselect:active:not(:disabled) {
+  background-color: #eff0ff;
+  border-color: #4f46e5;
+}
+
+.btn-deselect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Responsive Design
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .game-option {
+    padding: 12px 10px;
+  }
+
+  .game-thumbnail {
+    width: 44px;
+    height: 44px;
+  }
+
+  .game-name {
+    font-size: 0.85rem;
+  }
+
+  .game-dropdown {
+    max-height: 240px;
+  }
+
+  .game-selected {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .selected-thumbnail {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-search-input {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  .game-thumbnail {
+    width: 40px;
+    height: 40px;
+  }
+
+  .game-name {
+    font-size: 0.8rem;
+  }
+
+  .game-dropdown {
+    max-height: 200px;
+  }
+
+  .selected-name {
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================================
+   Scrollbar personalizado para dropdown
+   ============================================================ */
+
+.game-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.game-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.game-dropdown::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 3px;
+}
+
+.game-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Firefox scrollbar */
+.game-dropdown {
+  scrollbar-color: #c0c0c0 #f1f1f1;
+  scrollbar-width: thin;
+}

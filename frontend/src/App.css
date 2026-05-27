@@ -1,0 +1,135 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-7);
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-6);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.grid {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-3);
+  align-items: end;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  align-items: center;
+}
+
+.legal-banner {
+  background: rgba(108, 92, 231, 0.15);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-4);
+}
+
+.checkbox {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.divider {
+  border-top: 1px solid var(--border);
+  margin: var(--spacing-6) 0;
+}
+
+@media (max-width: 1024px) {
+  .grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+}

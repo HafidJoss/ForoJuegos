@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NuevoForo.Api/NuevoForo.Api.csproj" />
+    <Project Path="src/NuevoForo.Application/NuevoForo.Application.csproj" />
+    <Project Path="src/NuevoForo.Domain/NuevoForo.Domain.csproj" />
+    <Project Path="src/NuevoForo.Infrastructure/NuevoForo.Infrastructure.csproj" />
+    <Project Path="tests/NuevoForo.Api.UnitTests/NuevoForo.Api.UnitTests.csproj" Id="3625dd6d-cc87-499e-9a6a-4cac5c3fd7f4" />
+  </Folder>
+</Solution>

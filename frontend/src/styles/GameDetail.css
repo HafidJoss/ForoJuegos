@@ -1,0 +1,158 @@
+/* ============================================================
+   Game Detail & Premium Comments Section Styles
+   ============================================================ */
+
+.comments-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.premium-comment-card {
+  display: flex;
+  gap: 12px;
+  background: rgba(30, 27, 75, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.premium-comment-card:hover {
+  background: rgba(30, 27, 75, 0.35);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.comment-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.comment-main-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 4px;
+}
+
+.comment-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comment-author-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #c084fc;
+}
+
+.comment-text-body {
+  font-size: 0.9rem;
+  color: #e5e7eb;
+  line-height: 1.45;
+  margin: 2px 0 6px 0;
+}
+
+.comment-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.comment-date-text {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.comment-actions-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-comment-action {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-comment-action:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.btn-comment-action.delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+/* Formulario de comentarios */
+.premium-comment-form-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  background: rgba(17, 24, 39, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.premium-comment-form-box .ugc-comment-input {
+  flex-grow: 1;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #f3f4f6 !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  font-size: 0.88rem !important;
+  transition: all 0.25s !important;
+}
+
+.premium-comment-form-box .ugc-comment-input:focus {
+  border-color: #8b5cf6 !important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+
+.btn-comment-submit-glow {
+  padding: 0 16px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-comment-submit-glow:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}

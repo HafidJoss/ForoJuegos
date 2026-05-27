@@ -1,0 +1,120 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options directory
+.vs/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Rider
+.idea/
+.idea_modules/
+*.sln.iml
+*.sw*
+
+# Test Results
+TestResults/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Local environment files
+.env
+.env.local
+.env.*.local
+appsettings.local.json
+appsettings.Development.json
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~
+.sublime-workspace
+.sublime-project
+
+# ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# Entity Framework
+*.db
+*.db-shm
+*.db-wal
+
+# Production files
+wwwroot/uploads/
+wwwroot/dist/
+node_modules/
+
+# Backup files
+*.bak
+*.bakx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Coverage
+coverage/
+*.coverage
+
+# Deployment
+publish/
+PublishProfiles/
+
+# Certificate files
+*.pfx
+*.pem
+*.key
+*.crt
+
+# Railway
+.railway/
+
+# Miscellaneous
+*.log
+.vscode/extensions/
+dist/
+build/
