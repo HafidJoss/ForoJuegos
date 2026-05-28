@@ -1,0 +1,11 @@
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\bin\Debug\net10.0\NuevoForo.Domain.deps.json
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\bin\Debug\net10.0\NuevoForo.Domain.dll
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\bin\Debug\net10.0\NuevoForo.Domain.pdb
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\NuevoForo.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\NuevoForo.Domain.AssemblyInfoInputs.cache
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\NuevoForo.Domain.AssemblyInfo.cs
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\NuevoForo.Domain.csproj.CoreCompileInputs.cache
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\NuevoForo.Domain.dll
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\refint\NuevoForo.Domain.dll
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\NuevoForo.Domain.pdb
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Domain\obj\Debug\net10.0\ref\NuevoForo.Domain.dll

@@ -11,7 +11,6 @@ using NuevoForo.Infrastructure.Services;
 using NuevoForo.Infrastructure.Services.Import;
 using NuevoForo.Infrastructure.Data.Seeders;
 using NuevoForo.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -117,35 +116,6 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// ============ APLICAR MIGRACIONES AUTOMÁTICAS ============
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        logger.LogInformation("🔄 Iniciando migración de base de datos...");
-
-        // Aplicar migraciones pendientes
-        await dbContext.Database.MigrateAsync();
-
-        logger.LogInformation("✅ Migraciones aplicadas exitosamente");
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "❌ Error al aplicar migraciones de base de datos");
-
-        // En entorno de producción, queremos fallar si las migraciones no funcionan
-        if (!app.Environment.IsDevelopment())
-        {
-            throw;
-        }
-    }
-}
-// =======================================================
-
 // ============ CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS PARA UGC ============
 // Obtener la ruta de contenido (wwwroot o carpeta raíz del app)
 // Si WebRootPath es nulo, usar ContentRootPath + "wwwroot"
@@ -243,35 +213,10 @@ app.MapGroup("/auth").RequireRateLimiting("auth");
 
 using (var scope = app.Services.CreateScope())
 {
-    try
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    await RoleSeeder.SeedAsync(roleManager);
 
-        logger.LogInformation("🔄 Iniciando migración de base de datos...");
-
-        // Aplicar migraciones pendientes
-        await dbContext.Database.MigrateAsync();
-
-        logger.LogInformation("✅ Migraciones aplicadas exitosamente");
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "❌ Error al aplicar migraciones de base de datos");
-
-        // En entorno de producción, queremos fallar si las migraciones no funcionan
-        if (!app.Environment.IsDevelopment())
-        {
-            throw;
-        }
-    }
-}
-// =======================================================
-
-// ============ SEEDING DE JUEGOS DESDE STEAM ============
-using (var scope = app.Services.CreateScope())
-{
+    // ============ SEEDING DE JUEGOS DESDE STEAM ============
     try
     {
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
@@ -313,13 +258,7 @@ using (var scope = app.Services.CreateScope())
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "❌ Error durante el seeding de juegos");
     }
-}
-// =====================================================
-
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-    await RoleSeeder.SeedAsync(roleManager);
+    // =====================================================
 }
 
 app.Run();

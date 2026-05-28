@@ -1,0 +1,15 @@
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\bin\Debug\net10.0\NuevoForo.Application.deps.json
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\bin\Debug\net10.0\NuevoForo.Application.dll
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\bin\Debug\net10.0\NuevoForo.Application.pdb
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\bin\Debug\net10.0\NuevoForo.Domain.dll
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\bin\Debug\net10.0\NuevoForo.Domain.pdb
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoForo.Application.csproj.AssemblyReference.cache
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoForo.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoForo.Application.AssemblyInfoInputs.cache
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoForo.Application.AssemblyInfo.cs
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoForo.Application.csproj.CoreCompileInputs.cache
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoFor.EE47579B.Up2Date
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoForo.Application.dll
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\refint\NuevoForo.Application.dll
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\NuevoForo.Application.pdb
+C:\Users\PC\source\repos\NuevoForo\src\NuevoForo.Application\obj\Debug\net10.0\ref\NuevoForo.Application.dll

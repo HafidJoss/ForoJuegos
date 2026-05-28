@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "NuevoForo.Application/1.0.0": {
+        "dependencies": {
+          "NuevoForo.Domain": "1.0.0"
+        },
+        "runtime": {
+          "NuevoForo.Application.dll": {}
+        }
+      },
+      "NuevoForo.Domain/1.0.0": {
+        "runtime": {
+          "NuevoForo.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "NuevoForo.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "NuevoForo.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
