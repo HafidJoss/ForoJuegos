@@ -1,40 +1,38 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using NuevoForo.Api.IntegrationTests.Fixtures;
 using NuevoForo.Api.IntegrationTests.Helpers;
 using NuevoForo.Infrastructure.Data;
+using NuevoForo.Domain.Enums;
 
 namespace NuevoForo.Api.IntegrationTests.Integration.Reviews;
 
 /// <summary>
 /// Pruebas de integración para operaciones CRUD y relaciones de Reseñas.
 /// </summary>
-[TestClass]
-public class ReviewsIntegrationTests : IAsyncLifetime
+public class ReviewsIntegrationTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
 {
-    private DatabaseFixture _fixture = null!;
+    private readonly DatabaseFixture _fixture;
     private AppDbContext _dbContext = null!;
 
-    /// <summary>
-    /// Se ejecuta antes de cada prueba.
-    /// </summary>
+    public ReviewsIntegrationTests(DatabaseFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
     public async Task InitializeAsync()
     {
-        _fixture = new DatabaseFixture();
-        await _fixture.InitializeAsync();
         _dbContext = _fixture.DbContext;
+        await _fixture.ClearDatabaseAsync();
     }
 
-    /// <summary>
-    /// Se ejecuta después de cada prueba.
-    /// </summary>
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        await _fixture.DisposeAsync();
+        return Task.CompletedTask;
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede crear una reseña en la base de datos")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede crear una reseña en la base de datos")]
     public async Task CreateReview_WithValidData_ShouldPersistInDatabase()
     {
         // Arrange
@@ -44,9 +42,8 @@ public class ReviewsIntegrationTests : IAsyncLifetime
         var review = TestDataBuilder.CreateReview()
             .WithUsuarioId(user.Id)
             .WithJuegoId(game.Id)
-            .WithTitulo("Excelente juego")
-            .WithContenido("Una experiencia increíble")
-            .WithCalificacion(5)
+            .WithTexto("Una experiencia increíble")
+            .WithRating(5)
             .Build();
 
         // Act
@@ -57,41 +54,40 @@ public class ReviewsIntegrationTests : IAsyncLifetime
         var reviewSaved = await _dbContext.Resenas
             .FirstOrDefaultAsync(r => r.Id == review.Id);
 
-        Assert.IsNotNull(reviewSaved);
-        Assert.AreEqual("Excelente juego", reviewSaved.Titulo);
-        Assert.AreEqual(5, reviewSaved.Calificacion);
-        Assert.IsTrue(reviewSaved.Activo);
+        Assert.NotNull(reviewSaved);
+        Assert.Equal("Una experiencia increíble", reviewSaved.Texto);
+        Assert.Equal(5, reviewSaved.Rating);
+        Assert.Equal(EstadoResena.Activa, reviewSaved.Estado);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede actualizar una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede actualizar una reseña")]
     public async Task UpdateReview_WithModifiedData_ShouldPersistChanges()
     {
         // Arrange
         var review = await _fixture.GetOrCreateTestReviewAsync(
-            titulo: "Buen juego",
-            calificacion: 3
+            texto: "Buen juego",
+            rating: 3
         );
 
         // Act
         var reviewToUpdate = await _dbContext.Resenas
             .FirstAsync(r => r.Id == review.Id);
 
-        reviewToUpdate.Calificacion = 5;
-        reviewToUpdate.Titulo = "¡Excelente juego!";
-        reviewToUpdate.Contenido = "Increíble, lo recomiendo";
+        reviewToUpdate.Rating = 5;
+        reviewToUpdate.Texto = "Increíble, lo recomiendo";
         await _dbContext.SaveChangesAsync();
 
         // Assert
         var reviewVerified = await _dbContext.Resenas
             .FirstAsync(r => r.Id == review.Id);
 
-        Assert.AreEqual(5, reviewVerified.Calificacion);
-        Assert.AreEqual("¡Excelente juego!", reviewVerified.Titulo);
+        Assert.Equal(5, reviewVerified.Rating);
+        Assert.Equal("Increíble, lo recomiendo", reviewVerified.Texto);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede eliminar (soft delete) una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede eliminar (soft delete) una reseña")]
     public async Task DeleteReview_ShouldMarkAsInactive()
     {
         // Arrange
@@ -101,18 +97,18 @@ public class ReviewsIntegrationTests : IAsyncLifetime
         var reviewToDelete = await _dbContext.Resenas
             .FirstAsync(r => r.Id == review.Id);
 
-        reviewToDelete.Activo = false;
+        reviewToDelete.Estado = EstadoResena.Eliminada;
         await _dbContext.SaveChangesAsync();
 
         // Assert
         var deletedReview = await _dbContext.Resenas
             .FirstAsync(r => r.Id == review.Id);
 
-        Assert.IsFalse(deletedReview.Activo);
+        Assert.Equal(EstadoResena.Eliminada, deletedReview.Estado);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede recuperar una reseña con sus comentarios relacionados")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede recuperar una reseña con sus comentarios relacionados")]
     public async Task GetReview_WithComments_ShouldLoadRelatedEntities()
     {
         // Arrange
@@ -123,13 +119,13 @@ public class ReviewsIntegrationTests : IAsyncLifetime
         var comment1 = await _fixture.GetOrCreateTestCommentAsync(
             review: review,
             user: user1,
-            contenido: "Comentario 1"
+            texto: "Comentario 1"
         );
 
         var comment2 = await _fixture.GetOrCreateTestCommentAsync(
             review: review,
             user: user2,
-            contenido: "Comentario 2"
+            texto: "Comentario 2"
         );
 
         // Act
@@ -138,12 +134,12 @@ public class ReviewsIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync(r => r.Id == review.Id);
 
         // Assert
-        Assert.IsNotNull(reviewWithComments);
-        Assert.AreEqual(2, reviewWithComments.Comentarios?.Count);
+        Assert.NotNull(reviewWithComments);
+        Assert.Equal(2, reviewWithComments.Comentarios?.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede recuperar una reseña con usuario y juego relacionados")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede recuperar una reseña con usuario y juego relacionados")]
     public async Task GetReview_WithRelations_ShouldLoadAllEntities()
     {
         // Arrange
@@ -158,37 +154,39 @@ public class ReviewsIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync(r => r.Id == review.Id);
 
         // Assert
-        Assert.IsNotNull(reviewWithRelations);
-        Assert.IsNotNull(reviewWithRelations.Usuario);
-        Assert.IsNotNull(reviewWithRelations.Juego);
-        Assert.AreEqual(user.Id, reviewWithRelations.Usuario.Id);
-        Assert.AreEqual(game.Id, reviewWithRelations.Juego.Id);
+        Assert.NotNull(reviewWithRelations);
+        Assert.NotNull(reviewWithRelations.Usuario);
+        Assert.NotNull(reviewWithRelations.Juego);
+        Assert.Equal(user.Id, reviewWithRelations.Usuario.Id);
+        Assert.Equal(game.Id, reviewWithRelations.Juego.Id);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede buscar reseñas por título")]
-    public async Task SearchReviews_ByTitulo_ShouldReturnMatches()
+    [Fact]
+    [Trait("Description", "Verifica que se puede buscar reseñas por texto")]
+    public async Task SearchReviews_ByTexto_ShouldReturnMatches()
     {
         // Arrange
-        var user = await _fixture.GetOrCreateTestUserAsync();
+        var user1 = await _fixture.GetOrCreateTestUserAsync();
+        var user2 = await _fixture.GetOrCreateTestUserAsync();
+        var user3 = await _fixture.GetOrCreateTestUserAsync();
         var game = await _fixture.GetOrCreateTestGameAsync();
 
         var review1 = TestDataBuilder.CreateReview()
-            .WithUsuarioId(user.Id)
+            .WithUsuarioId(user1.Id)
             .WithJuegoId(game.Id)
-            .WithTitulo("El mejor juego del año")
+            .WithTexto("El mejor juego del año")
             .Build();
 
         var review2 = TestDataBuilder.CreateReview()
-            .WithUsuarioId(user.Id)
+            .WithUsuarioId(user2.Id)
             .WithJuegoId(game.Id)
-            .WithTitulo("El mejor juego que he jugado")
+            .WithTexto("El mejor juego que he jugado")
             .Build();
 
         var review3 = TestDataBuilder.CreateReview()
-            .WithUsuarioId(user.Id)
+            .WithUsuarioId(user3.Id)
             .WithJuegoId(game.Id)
-            .WithTitulo("No es mi tipo de juego")
+            .WithTexto("No es mi tipo de juego")
             .Build();
 
         _dbContext.Resenas.AddRange(review1, review2, review3);
@@ -196,37 +194,39 @@ public class ReviewsIntegrationTests : IAsyncLifetime
 
         // Act
         var bestGameReviews = await _dbContext.Resenas
-            .Where(r => r.Titulo.Contains("mejor") && r.Activo)
+            .Where(r => r.Texto.Contains("mejor") && r.Estado == EstadoResena.Activa)
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(2, bestGameReviews.Count);
+        Assert.Equal(2, bestGameReviews.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se pueden filtrar reseñas por calificación")]
-    public async Task FilterReviews_ByCalificacion_ShouldReturnMatches()
+    [Fact]
+    [Trait("Description", "Verifica que se pueden filtrar reseñas por calificación")]
+    public async Task FilterReviews_ByRating_ShouldReturnMatches()
     {
         // Arrange
-        var user = await _fixture.GetOrCreateTestUserAsync();
+        var user1 = await _fixture.GetOrCreateTestUserAsync();
+        var user2 = await _fixture.GetOrCreateTestUserAsync();
+        var user3 = await _fixture.GetOrCreateTestUserAsync();
         var game = await _fixture.GetOrCreateTestGameAsync();
 
         var review5Stars = TestDataBuilder.CreateReview()
-            .WithUsuarioId(user.Id)
+            .WithUsuarioId(user1.Id)
             .WithJuegoId(game.Id)
-            .WithCalificacion(5)
+            .WithRating(5)
             .Build();
 
         var review4Stars = TestDataBuilder.CreateReview()
-            .WithUsuarioId(user.Id)
+            .WithUsuarioId(user2.Id)
             .WithJuegoId(game.Id)
-            .WithCalificacion(4)
+            .WithRating(4)
             .Build();
 
         var review2Stars = TestDataBuilder.CreateReview()
-            .WithUsuarioId(user.Id)
+            .WithUsuarioId(user3.Id)
             .WithJuegoId(game.Id)
-            .WithCalificacion(2)
+            .WithRating(2)
             .Build();
 
         _dbContext.Resenas.AddRange(review5Stars, review4Stars, review2Stars);
@@ -234,24 +234,25 @@ public class ReviewsIntegrationTests : IAsyncLifetime
 
         // Act
         var highRatedReviews = await _dbContext.Resenas
-            .Where(r => r.Calificacion >= 4 && r.Activo)
+            .Where(r => r.Rating >= 4 && r.Estado == EstadoResena.Activa)
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(2, highRatedReviews.Count);
+        Assert.Equal(2, highRatedReviews.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se pueden obtener todas las reseñas activas")]
+    [Fact]
+    [Trait("Description", "Verifica que se pueden obtener todas las reseñas activas")]
     public async Task ListActiveReviews_ShouldExcludeInactiveReviews()
     {
         // Arrange
         var activeReview = await _fixture.GetOrCreateTestReviewAsync();
+        var user2 = await _fixture.GetOrCreateTestUserAsync();
 
         var inactiveReview = TestDataBuilder.CreateReview()
-            .WithUsuarioId(activeReview.UsuarioId)
+            .WithUsuarioId(user2.Id)
             .WithJuegoId(activeReview.JuegoId)
-            .WithActivo(false)
+            .WithEstado(EstadoResena.Eliminada)
             .Build();
 
         _dbContext.Resenas.Add(inactiveReview);
@@ -259,15 +260,15 @@ public class ReviewsIntegrationTests : IAsyncLifetime
 
         // Act
         var activeReviews = await _dbContext.Resenas
-            .Where(r => r.Activo)
+            .Where(r => r.Estado == EstadoResena.Activa)
             .ToListAsync();
 
         // Assert
-        Assert.IsTrue(activeReviews.All(r => r.Activo));
+        Assert.True(activeReviews.All(r => r.Estado == EstadoResena.Activa));
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede contar reseñas por juego")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede contar reseñas por juego")]
     public async Task CountReviewsByGame_ShouldReturnCorrectCount()
     {
         // Arrange
@@ -280,15 +281,15 @@ public class ReviewsIntegrationTests : IAsyncLifetime
 
         // Act
         var reviewCount = await _dbContext.Resenas
-            .Where(r => r.JuegoId == game.Id && r.Activo)
+            .Where(r => r.JuegoId == game.Id && r.Estado == EstadoResena.Activa)
             .CountAsync();
 
         // Assert
-        Assert.AreEqual(2, reviewCount);
+        Assert.Equal(2, reviewCount);
     }
 
-    [TestMethod]
-    [Description("Verifica que no se puede crear reseña sin usuario o juego")]
+    [Fact]
+    [Trait("Description", "Verifica que no se puede crear reseña sin usuario o juego")]
     public async Task CreateReview_WithInvalidFK_ShouldThrowException()
     {
         // Arrange
@@ -304,12 +305,11 @@ public class ReviewsIntegrationTests : IAsyncLifetime
         {
             await _dbContext.SaveChangesAsync();
             // Si no lanza excepción, el constraint no está configurado correctamente
-            // (que es ok en este caso, ya que es behavior de la app)
         }
         catch (Exception)
         {
             // Se espera una excepción de FK
-            Assert.IsTrue(true);
+            Assert.True(true);
         }
     }
 }

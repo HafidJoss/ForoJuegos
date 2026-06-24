@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using NuevoForo.Domain.Entities;
 using NuevoForo.Infrastructure.Data;
+using NuevoForo.Domain.Enums;
 
 namespace NuevoForo.Api.IntegrationTests.Fixtures;
 
@@ -59,6 +60,7 @@ public class DatabaseFixture : IAsyncLifetime
     /// </summary>
     public async Task ClearDatabaseAsync()
     {
+        DbContext.ChangeTracker.Clear();
         // Orden importante: eliminar tablas con dependencias primero (FK)
         DbContext.LikesUgc.RemoveRange(DbContext.LikesUgc);
         DbContext.ContenidosUgc.RemoveRange(DbContext.ContenidosUgc);
@@ -91,10 +93,12 @@ public class DatabaseFixture : IAsyncLifetime
             Email = email ?? $"test_{Guid.NewGuid().ToString().Substring(0, 8)}@example.com",
             NormalizedEmail = (email ?? $"test_{Guid.NewGuid().ToString().Substring(0, 8)}@example.com").ToUpper(),
             Nombre = "Test",
-            Apellido = "User",
             EmailConfirmed = true,
-            FechaCreacion = DateTime.UtcNow,
-            Activo = true
+            FechaRegistro = DateTime.UtcNow,
+            Estado = EstadoUsuario.Activo,
+            PasswordHash = "AQAAAAEAACcQAAAAEA...",
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString()
         };
 
         DbContext.Usuarios.Add(user);
@@ -113,9 +117,7 @@ public class DatabaseFixture : IAsyncLifetime
             Nombre = nombre ?? $"Test Game {Guid.NewGuid().ToString().Substring(0, 8)}",
             Descripcion = "Juego de prueba",
             Plataforma = "PC",
-            FechaLanzamiento = DateTime.UtcNow.AddDays(-30),
-            FechaCreacion = DateTime.UtcNow,
-            Activo = true
+            FechaLanzamiento = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30))
         };
 
         DbContext.Juegos.Add(game);
@@ -129,8 +131,8 @@ public class DatabaseFixture : IAsyncLifetime
     public async Task<Resena> GetOrCreateTestReviewAsync(
         Usuario? user = null,
         Juego? game = null,
-        string? titulo = null,
-        int calificacion = 5)
+        string? texto = null,
+        int rating = 5)
     {
         user ??= await GetOrCreateTestUserAsync();
         game ??= await GetOrCreateTestGameAsync();
@@ -140,11 +142,10 @@ public class DatabaseFixture : IAsyncLifetime
             Id = Guid.NewGuid(),
             UsuarioId = user.Id,
             JuegoId = game.Id,
-            Titulo = titulo ?? "Test Review",
-            Contenido = "Esta es una reseña de prueba",
-            Calificacion = calificacion,
+            Texto = texto ?? "Esta es una reseña de prueba",
+            Rating = rating,
             FechaCreacion = DateTime.UtcNow,
-            Activo = true
+            Estado = EstadoResena.Activa
         };
 
         DbContext.Resenas.Add(review);
@@ -158,7 +159,7 @@ public class DatabaseFixture : IAsyncLifetime
     public async Task<Comentario> GetOrCreateTestCommentAsync(
         Resena? review = null,
         Usuario? user = null,
-        string? contenido = null)
+        string? texto = null)
     {
         review ??= await GetOrCreateTestReviewAsync();
         user ??= await GetOrCreateTestUserAsync();
@@ -168,9 +169,9 @@ public class DatabaseFixture : IAsyncLifetime
             Id = Guid.NewGuid(),
             ResenaId = review.Id,
             UsuarioId = user.Id,
-            Contenido = contenido ?? "Test comment",
+            Texto = texto ?? "Test comment",
             FechaCreacion = DateTime.UtcNow,
-            Activo = true
+            Estado = EstadoComentario.Activo
         };
 
         DbContext.Comentarios.Add(comment);

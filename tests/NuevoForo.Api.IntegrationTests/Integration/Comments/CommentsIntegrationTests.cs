@@ -1,40 +1,38 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using NuevoForo.Api.IntegrationTests.Fixtures;
 using NuevoForo.Api.IntegrationTests.Helpers;
 using NuevoForo.Infrastructure.Data;
+using NuevoForo.Domain.Enums;
 
 namespace NuevoForo.Api.IntegrationTests.Integration.Comments;
 
 /// <summary>
 /// Pruebas de integración para operaciones CRUD y relaciones de Comentarios.
 /// </summary>
-[TestClass]
-public class CommentsIntegrationTests : IAsyncLifetime
+public class CommentsIntegrationTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
 {
-    private DatabaseFixture _fixture = null!;
+    private readonly DatabaseFixture _fixture;
     private AppDbContext _dbContext = null!;
 
-    /// <summary>
-    /// Se ejecuta antes de cada prueba.
-    /// </summary>
+    public CommentsIntegrationTests(DatabaseFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
     public async Task InitializeAsync()
     {
-        _fixture = new DatabaseFixture();
-        await _fixture.InitializeAsync();
         _dbContext = _fixture.DbContext;
+        await _fixture.ClearDatabaseAsync();
     }
 
-    /// <summary>
-    /// Se ejecuta después de cada prueba.
-    /// </summary>
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        await _fixture.DisposeAsync();
+        return Task.CompletedTask;
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede crear un comentario en una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede crear un comentario en una reseña")]
     public async Task CreateComment_WithValidData_ShouldPersistInDatabase()
     {
         // Arrange
@@ -44,7 +42,7 @@ public class CommentsIntegrationTests : IAsyncLifetime
         var comment = TestDataBuilder.CreateComment()
             .WithResenaId(review.Id)
             .WithUsuarioId(user.Id)
-            .WithContenido("Totalmente de acuerdo, excelente reseña")
+            .WithTexto("Totalmente de acuerdo, excelente reseña")
             .Build();
 
         // Act
@@ -55,38 +53,38 @@ public class CommentsIntegrationTests : IAsyncLifetime
         var commentSaved = await _dbContext.Comentarios
             .FirstOrDefaultAsync(c => c.Id == comment.Id);
 
-        Assert.IsNotNull(commentSaved);
-        Assert.AreEqual(review.Id, commentSaved.ResenaId);
-        Assert.AreEqual(user.Id, commentSaved.UsuarioId);
-        Assert.AreEqual("Totalmente de acuerdo, excelente reseña", commentSaved.Contenido);
-        Assert.IsTrue(commentSaved.Activo);
+        Assert.NotNull(commentSaved);
+        Assert.Equal(review.Id, commentSaved.ResenaId);
+        Assert.Equal(user.Id, commentSaved.UsuarioId);
+        Assert.Equal("Totalmente de acuerdo, excelente reseña", commentSaved.Texto);
+        Assert.Equal(EstadoComentario.Activo, commentSaved.Estado);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede actualizar un comentario")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede actualizar un comentario")]
     public async Task UpdateComment_WithModifiedData_ShouldPersistChanges()
     {
         // Arrange
         var comment = await _fixture.GetOrCreateTestCommentAsync(
-            contenido: "Comentario original"
+            texto: "Comentario original"
         );
 
         // Act
         var commentToUpdate = await _dbContext.Comentarios
             .FirstAsync(c => c.Id == comment.Id);
 
-        commentToUpdate.Contenido = "Comentario actualizado";
+        commentToUpdate.Texto = "Comentario actualizado";
         await _dbContext.SaveChangesAsync();
 
         // Assert
         var commentVerified = await _dbContext.Comentarios
             .FirstAsync(c => c.Id == comment.Id);
 
-        Assert.AreEqual("Comentario actualizado", commentVerified.Contenido);
+        Assert.Equal("Comentario actualizado", commentVerified.Texto);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede eliminar (soft delete) un comentario")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede eliminar (soft delete) un comentario")]
     public async Task DeleteComment_ShouldMarkAsInactive()
     {
         // Arrange
@@ -96,18 +94,18 @@ public class CommentsIntegrationTests : IAsyncLifetime
         var commentToDelete = await _dbContext.Comentarios
             .FirstAsync(c => c.Id == comment.Id);
 
-        commentToDelete.Activo = false;
+        commentToDelete.Estado = EstadoComentario.Eliminado;
         await _dbContext.SaveChangesAsync();
 
         // Assert
         var deletedComment = await _dbContext.Comentarios
             .FirstAsync(c => c.Id == comment.Id);
 
-        Assert.IsFalse(deletedComment.Activo);
+        Assert.Equal(EstadoComentario.Eliminado, deletedComment.Estado);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede recuperar un comentario con usuario relacionado")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede recuperar un comentario con usuario relacionado")]
     public async Task GetComment_WithUser_ShouldLoadRelatedEntity()
     {
         // Arrange
@@ -120,13 +118,13 @@ public class CommentsIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync(c => c.Id == comment.Id);
 
         // Assert
-        Assert.IsNotNull(commentWithUser);
-        Assert.IsNotNull(commentWithUser.Usuario);
-        Assert.AreEqual(user.Id, commentWithUser.Usuario.Id);
+        Assert.NotNull(commentWithUser);
+        Assert.NotNull(commentWithUser.Usuario);
+        Assert.Equal(user.Id, commentWithUser.Usuario.Id);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede recuperar un comentario con reseña relacionada")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede recuperar un comentario con reseña relacionada")]
     public async Task GetComment_WithReview_ShouldLoadRelatedEntity()
     {
         // Arrange
@@ -139,14 +137,14 @@ public class CommentsIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync(c => c.Id == comment.Id);
 
         // Assert
-        Assert.IsNotNull(commentWithReview);
-        Assert.IsNotNull(commentWithReview.Resena);
-        Assert.AreEqual(review.Id, commentWithReview.Resena.Id);
+        Assert.NotNull(commentWithReview);
+        Assert.NotNull(commentWithReview.Resena);
+        Assert.Equal(review.Id, commentWithReview.Resena.Id);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede buscar comentarios por contenido")]
-    public async Task SearchComments_ByContenido_ShouldReturnMatches()
+    [Fact]
+    [Trait("Description", "Verifica que se puede buscar comentarios por texto")]
+    public async Task SearchComments_ByTexto_ShouldReturnMatches()
     {
         // Arrange
         var review = await _fixture.GetOrCreateTestReviewAsync();
@@ -156,32 +154,32 @@ public class CommentsIntegrationTests : IAsyncLifetime
         var comment1 = await _fixture.GetOrCreateTestCommentAsync(
             review: review,
             user: user1,
-            contenido: "Excelente análisis del juego"
+            texto: "Excelente análisis del juego"
         );
 
         var comment2 = await _fixture.GetOrCreateTestCommentAsync(
             review: review,
             user: user2,
-            contenido: "No estoy de acuerdo con el análisis"
+            texto: "No estoy de acuerdo con el análisis"
         );
 
         var comment3 = await _fixture.GetOrCreateTestCommentAsync(
             review: review,
             user: user1,
-            contenido: "Las gráficas son muy buenas"
+            texto: "Las gráficas son muy buenas"
         );
 
         // Act
         var analysisComments = await _dbContext.Comentarios
-            .Where(c => c.Contenido.Contains("análisis") && c.Activo)
+            .Where(c => c.Texto.Contains("análisis") && c.Estado == EstadoComentario.Activo)
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(2, analysisComments.Count);
+        Assert.Equal(2, analysisComments.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede contar comentarios en una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede contar comentarios en una reseña")]
     public async Task CountCommentsByReview_ShouldReturnCorrectCount()
     {
         // Arrange
@@ -196,15 +194,15 @@ public class CommentsIntegrationTests : IAsyncLifetime
 
         // Act
         var commentCount = await _dbContext.Comentarios
-            .Where(c => c.ResenaId == review.Id && c.Activo)
+            .Where(c => c.ResenaId == review.Id && c.Estado == EstadoComentario.Activo)
             .CountAsync();
 
         // Assert
-        Assert.AreEqual(3, commentCount);
+        Assert.Equal(3, commentCount);
     }
 
-    [TestMethod]
-    [Description("Verifica que se pueden obtener comentarios ordenados por fecha")]
+    [Fact]
+    [Trait("Description", "Verifica que se pueden obtener comentarios ordenados por fecha")]
     public async Task GetComments_OrderedByFecha_ShouldReturnInCorrectOrder()
     {
         // Arrange
@@ -214,21 +212,21 @@ public class CommentsIntegrationTests : IAsyncLifetime
         var comment1 = TestDataBuilder.CreateComment()
             .WithResenaId(review.Id)
             .WithUsuarioId(user.Id)
-            .WithContenido("Primer comentario")
+            .WithTexto("Primer comentario")
             .WithFechaCreacion(DateTime.UtcNow.AddHours(-2))
             .Build();
 
         var comment2 = TestDataBuilder.CreateComment()
             .WithResenaId(review.Id)
             .WithUsuarioId(user.Id)
-            .WithContenido("Segundo comentario")
+            .WithTexto("Segundo comentario")
             .WithFechaCreacion(DateTime.UtcNow.AddHours(-1))
             .Build();
 
         var comment3 = TestDataBuilder.CreateComment()
             .WithResenaId(review.Id)
             .WithUsuarioId(user.Id)
-            .WithContenido("Tercer comentario")
+            .WithTexto("Tercer comentario")
             .WithFechaCreacion(DateTime.UtcNow)
             .Build();
 
@@ -237,18 +235,18 @@ public class CommentsIntegrationTests : IAsyncLifetime
 
         // Act
         var orderedComments = await _dbContext.Comentarios
-            .Where(c => c.ResenaId == review.Id && c.Activo)
+            .Where(c => c.ResenaId == review.Id && c.Estado == EstadoComentario.Activo)
             .OrderBy(c => c.FechaCreacion)
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(3, orderedComments.Count);
-        Assert.AreEqual("Primer comentario", orderedComments[0].Contenido);
-        Assert.AreEqual("Tercer comentario", orderedComments[2].Contenido);
+        Assert.Equal(3, orderedComments.Count);
+        Assert.Equal("Primer comentario", orderedComments[0].Texto);
+        Assert.Equal("Tercer comentario", orderedComments[2].Texto);
     }
 
-    [TestMethod]
-    [Description("Verifica que solo se obtienen comentarios activos")]
+    [Fact]
+    [Trait("Description", "Verifica que solo se obtienen comentarios activos")]
     public async Task ListActiveComments_ShouldExcludeInactiveComments()
     {
         // Arrange
@@ -259,7 +257,7 @@ public class CommentsIntegrationTests : IAsyncLifetime
         var inactiveComment = TestDataBuilder.CreateComment()
             .WithResenaId(review.Id)
             .WithUsuarioId(activeComment.UsuarioId)
-            .WithActivo(false)
+            .WithEstado(EstadoComentario.Eliminado)
             .Build();
 
         _dbContext.Comentarios.Add(inactiveComment);
@@ -267,15 +265,15 @@ public class CommentsIntegrationTests : IAsyncLifetime
 
         // Act
         var activeComments = await _dbContext.Comentarios
-            .Where(c => c.ResenaId == review.Id && c.Activo)
+            .Where(c => c.ResenaId == review.Id && c.Estado == EstadoComentario.Activo)
             .ToListAsync();
 
         // Assert
-        Assert.IsTrue(activeComments.All(c => c.Activo));
+        Assert.True(activeComments.All(c => c.Estado == EstadoComentario.Activo));
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede obtener el comentario más reciente de una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede obtener el comentario más reciente de una reseña")]
     public async Task GetLatestComment_ByReview_ShouldReturnMostRecent()
     {
         // Arrange
@@ -285,14 +283,14 @@ public class CommentsIntegrationTests : IAsyncLifetime
         var oldComment = TestDataBuilder.CreateComment()
             .WithResenaId(review.Id)
             .WithUsuarioId(user.Id)
-            .WithContenido("Comentario antiguo")
+            .WithTexto("Comentario antiguo")
             .WithFechaCreacion(DateTime.UtcNow.AddDays(-1))
             .Build();
 
         var newComment = TestDataBuilder.CreateComment()
             .WithResenaId(review.Id)
             .WithUsuarioId(user.Id)
-            .WithContenido("Comentario reciente")
+            .WithTexto("Comentario reciente")
             .WithFechaCreacion(DateTime.UtcNow)
             .Build();
 
@@ -301,12 +299,12 @@ public class CommentsIntegrationTests : IAsyncLifetime
 
         // Act
         var latestComment = await _dbContext.Comentarios
-            .Where(c => c.ResenaId == review.Id && c.Activo)
+            .Where(c => c.ResenaId == review.Id && c.Estado == EstadoComentario.Activo)
             .OrderByDescending(c => c.FechaCreacion)
             .FirstOrDefaultAsync();
 
         // Assert
-        Assert.IsNotNull(latestComment);
-        Assert.AreEqual("Comentario reciente", latestComment.Contenido);
+        Assert.NotNull(latestComment);
+        Assert.Equal("Comentario reciente", latestComment.Texto);
     }
 }

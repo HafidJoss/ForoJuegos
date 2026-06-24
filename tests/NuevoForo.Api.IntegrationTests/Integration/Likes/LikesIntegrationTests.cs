@@ -1,40 +1,38 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using NuevoForo.Api.IntegrationTests.Fixtures;
 using NuevoForo.Api.IntegrationTests.Helpers;
 using NuevoForo.Infrastructure.Data;
+using NuevoForo.Domain.Enums;
 
 namespace NuevoForo.Api.IntegrationTests.Integration.Likes;
 
 /// <summary>
 /// Pruebas de integración para operaciones CRUD y relaciones de Likes en Reseñas.
 /// </summary>
-[TestClass]
-public class LikesIntegrationTests : IAsyncLifetime
+public class LikesIntegrationTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
 {
-    private DatabaseFixture _fixture = null!;
+    private readonly DatabaseFixture _fixture;
     private AppDbContext _dbContext = null!;
 
-    /// <summary>
-    /// Se ejecuta antes de cada prueba.
-    /// </summary>
+    public LikesIntegrationTests(DatabaseFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
     public async Task InitializeAsync()
     {
-        _fixture = new DatabaseFixture();
-        await _fixture.InitializeAsync();
         _dbContext = _fixture.DbContext;
+        await _fixture.ClearDatabaseAsync();
     }
 
-    /// <summary>
-    /// Se ejecuta después de cada prueba.
-    /// </summary>
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        await _fixture.DisposeAsync();
+        return Task.CompletedTask;
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede agregar un like a una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede agregar un like a una reseña")]
     public async Task AddLike_ToReview_ShouldPersistInDatabase()
     {
         // Arrange
@@ -54,13 +52,13 @@ public class LikesIntegrationTests : IAsyncLifetime
         var likeSaved = await _dbContext.LikesResena
             .FirstOrDefaultAsync(l => l.Id == like.Id);
 
-        Assert.IsNotNull(likeSaved);
-        Assert.AreEqual(review.Id, likeSaved.ResenaId);
-        Assert.AreEqual(user.Id, likeSaved.UsuarioId);
+        Assert.NotNull(likeSaved);
+        Assert.Equal(review.Id, likeSaved.ResenaId);
+        Assert.Equal(user.Id, likeSaved.UsuarioId);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede remover un like de una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede remover un like de una reseña")]
     public async Task RemoveLike_FromReview_ShouldDeleteFromDatabase()
     {
         // Arrange
@@ -77,11 +75,11 @@ public class LikesIntegrationTests : IAsyncLifetime
         var deletedLike = await _dbContext.LikesResena
             .FirstOrDefaultAsync(l => l.Id == like.Id);
 
-        Assert.IsNull(deletedLike);
+        Assert.Null(deletedLike);
     }
 
-    [TestMethod]
-    [Description("Verifica que no se puede dar like dos veces a la misma reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que no se puede dar like dos veces a la misma reseña")]
     public async Task AddDuplicateLike_ShouldThrowException()
     {
         // Arrange
@@ -109,15 +107,15 @@ public class LikesIntegrationTests : IAsyncLifetime
             // Si no lanza excepción, podría ser que el constraint no está configurado
             // o que está permitido (behavior de la app)
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Se espera una excepción de constratin o unique
-            Assert.IsTrue(true);
+            Assert.True(true);
         }
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede contar los likes de una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede contar los likes de una reseña")]
     public async Task CountLikes_ByReview_ShouldReturnCorrectCount()
     {
         // Arrange
@@ -136,11 +134,11 @@ public class LikesIntegrationTests : IAsyncLifetime
             .CountAsync();
 
         // Assert
-        Assert.AreEqual(3, likeCount);
+        Assert.Equal(3, likeCount);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede verificar si un usuario ha dado like a una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede verificar si un usuario ha dado like a una reseña")]
     public async Task CheckIfUserLiked_ShouldReturnCorrectResult()
     {
         // Arrange
@@ -158,12 +156,12 @@ public class LikesIntegrationTests : IAsyncLifetime
             .AnyAsync(l => l.ResenaId == review.Id && l.UsuarioId == userWhoDidNotLike.Id);
 
         // Assert
-        Assert.IsTrue(userLiked);
-        Assert.IsFalse(userDidNotLike);
+        Assert.True(userLiked);
+        Assert.False(userDidNotLike);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede obtener todas las reseñas liked por un usuario")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede obtener todas las reseñas liked por un usuario")]
     public async Task GetLikedReviews_ByUser_ShouldReturnMatches()
     {
         // Arrange
@@ -185,11 +183,11 @@ public class LikesIntegrationTests : IAsyncLifetime
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(2, likedReviews.Count);
+        Assert.Equal(2, likedReviews.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se pueden obtener los likes ordenados por fecha")]
+    [Fact]
+    [Trait("Description", "Verifica que se pueden obtener los likes ordenados por fecha")]
     public async Task GetLikes_OrderedByFecha_ShouldReturnInCorrectOrder()
     {
         // Arrange
@@ -226,13 +224,13 @@ public class LikesIntegrationTests : IAsyncLifetime
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(3, orderedLikes.Count);
-        Assert.AreEqual(user1.Id, orderedLikes[0].UsuarioId);
-        Assert.AreEqual(user3.Id, orderedLikes[2].UsuarioId);
+        Assert.Equal(3, orderedLikes.Count);
+        Assert.Equal(user1.Id, orderedLikes[0].UsuarioId);
+        Assert.Equal(user3.Id, orderedLikes[2].UsuarioId);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede obtener el like más reciente en una reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede obtener el like más reciente en una reseña")]
     public async Task GetLatestLike_ByReview_ShouldReturnMostRecent()
     {
         // Arrange
@@ -262,12 +260,12 @@ public class LikesIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync();
 
         // Assert
-        Assert.IsNotNull(latestLike);
-        Assert.AreEqual(user2.Id, latestLike.UsuarioId);
+        Assert.NotNull(latestLike);
+        Assert.Equal(user2.Id, latestLike.UsuarioId);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede obtener el promedio de likes por reseña")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede obtener el promedio de likes por reseña")]
     public async Task CalculateAverageLikes_PerReview_ShouldReturnCorrectValue()
     {
         // Arrange
@@ -300,8 +298,8 @@ public class LikesIntegrationTests : IAsyncLifetime
         var averageLikes = (double)totalLikes / totalReviews;
 
         // Assert
-        Assert.AreEqual(4, totalLikes);
-        Assert.AreEqual(2, totalReviews);
-        Assert.AreEqual(2.0, averageLikes, 0.01);
+        Assert.Equal(4, totalLikes);
+        Assert.Equal(2, totalReviews);
+        Assert.Equal(2.0, averageLikes, 0.01);
     }
 }

@@ -1,40 +1,38 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using NuevoForo.Api.IntegrationTests.Fixtures;
 using NuevoForo.Api.IntegrationTests.Helpers;
 using NuevoForo.Infrastructure.Data;
+using NuevoForo.Domain.Enums;
 
 namespace NuevoForo.Api.IntegrationTests.Integration.Games;
 
 /// <summary>
 /// Pruebas de integración para operaciones CRUD y relaciones de Juegos.
 /// </summary>
-[TestClass]
-public class GamesIntegrationTests : IAsyncLifetime
+public class GamesIntegrationTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
 {
-    private DatabaseFixture _fixture = null!;
+    private readonly DatabaseFixture _fixture;
     private AppDbContext _dbContext = null!;
 
-    /// <summary>
-    /// Se ejecuta antes de cada prueba.
-    /// </summary>
+    public GamesIntegrationTests(DatabaseFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
     public async Task InitializeAsync()
     {
-        _fixture = new DatabaseFixture();
-        await _fixture.InitializeAsync();
         _dbContext = _fixture.DbContext;
+        await _fixture.ClearDatabaseAsync();
     }
 
-    /// <summary>
-    /// Se ejecuta después de cada prueba.
-    /// </summary>
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        await _fixture.DisposeAsync();
+        return Task.CompletedTask;
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede crear un juego en la base de datos")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede crear un juego en la base de datos")]
     public async Task CreateGame_WithValidData_ShouldPersistInDatabase()
     {
         // Arrange
@@ -52,14 +50,13 @@ public class GamesIntegrationTests : IAsyncLifetime
         var gameSaved = await _dbContext.Juegos
             .FirstOrDefaultAsync(g => g.Id == game.Id);
 
-        Assert.IsNotNull(gameSaved);
-        Assert.AreEqual("The Witcher 3", gameSaved.Nombre);
-        Assert.AreEqual("PC", gameSaved.Plataforma);
-        Assert.IsTrue(gameSaved.Activo);
+        Assert.NotNull(gameSaved);
+        Assert.Equal("The Witcher 3", gameSaved.Nombre);
+        Assert.Equal("PC", gameSaved.Plataforma);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede actualizar los datos de un juego")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede actualizar los datos de un juego")]
     public async Task UpdateGame_WithModifiedData_ShouldPersistChanges()
     {
         // Arrange
@@ -77,28 +74,29 @@ public class GamesIntegrationTests : IAsyncLifetime
         var gameVerified = await _dbContext.Juegos
             .FirstAsync(g => g.Id == game.Id);
 
-        Assert.AreEqual("Game Actualizado", gameVerified.Nombre);
-        Assert.AreEqual("Nueva descripción", gameVerified.Descripcion);
+        Assert.Equal("Game Actualizado", gameVerified.Nombre);
+        Assert.Equal("Nueva descripción", gameVerified.Descripcion);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede recuperar un juego con sus reseñas relacionadas")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede recuperar un juego con sus reseñas relacionadas")]
     public async Task GetGame_WithReviews_ShouldLoadRelatedEntities()
     {
         // Arrange
         var game = await _fixture.GetOrCreateTestGameAsync();
-        var user = await _fixture.GetOrCreateTestUserAsync();
+        var user1 = await _fixture.GetOrCreateTestUserAsync();
+        var user2 = await _fixture.GetOrCreateTestUserAsync();
 
         var review1 = TestDataBuilder.CreateReview()
             .WithJuegoId(game.Id)
-            .WithUsuarioId(user.Id)
-            .WithTitulo("Reseña 1")
+            .WithUsuarioId(user1.Id)
+            .WithTexto("Reseña 1")
             .Build();
 
         var review2 = TestDataBuilder.CreateReview()
             .WithJuegoId(game.Id)
-            .WithUsuarioId(user.Id)
-            .WithTitulo("Reseña 2")
+            .WithUsuarioId(user2.Id)
+            .WithTexto("Reseña 2")
             .Build();
 
         _dbContext.Resenas.AddRange(review1, review2);
@@ -110,12 +108,12 @@ public class GamesIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync(g => g.Id == game.Id);
 
         // Assert
-        Assert.IsNotNull(gameWithReviews);
-        Assert.AreEqual(2, gameWithReviews.Resenas?.Count);
+        Assert.NotNull(gameWithReviews);
+        Assert.Equal(2, gameWithReviews.Resenas?.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede buscar juegos por nombre")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede buscar juegos por nombre")]
     public async Task SearchGames_ByNombre_ShouldReturnMatches()
     {
         // Arrange
@@ -140,12 +138,12 @@ public class GamesIntegrationTests : IAsyncLifetime
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(1, darkSoulsGames.Count);
-        Assert.AreEqual("Dark Souls 3", darkSoulsGames[0].Nombre);
+        Assert.Equal(1, darkSoulsGames.Count);
+        Assert.Equal("Dark Souls 3", darkSoulsGames[0].Nombre);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede filtrar juegos por plataforma")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede filtrar juegos por plataforma")]
     public async Task FilterGames_ByPlataforma_ShouldReturnMatches()
     {
         // Arrange
@@ -169,15 +167,15 @@ public class GamesIntegrationTests : IAsyncLifetime
 
         // Act
         var pcGames = await _dbContext.Juegos
-            .Where(g => g.Plataforma == "PC" && g.Activo)
+            .Where(g => g.Plataforma == "PC")
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(2, pcGames.Count);
+        Assert.Equal(2, pcGames.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede obtener el promedio de calificaciones de un juego")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede obtener el promedio de calificaciones de un juego")]
     public async Task GetGameAverageRating_ShouldCalculateCorrectly()
     {
         // Arrange
@@ -189,19 +187,19 @@ public class GamesIntegrationTests : IAsyncLifetime
         var review1 = TestDataBuilder.CreateReview()
             .WithJuegoId(game.Id)
             .WithUsuarioId(user1.Id)
-            .WithCalificacion(5)
+            .WithRating(5)
             .Build();
 
         var review2 = TestDataBuilder.CreateReview()
             .WithJuegoId(game.Id)
             .WithUsuarioId(user2.Id)
-            .WithCalificacion(4)
+            .WithRating(4)
             .Build();
 
         var review3 = TestDataBuilder.CreateReview()
             .WithJuegoId(game.Id)
             .WithUsuarioId(user3.Id)
-            .WithCalificacion(3)
+            .WithRating(3)
             .Build();
 
         _dbContext.Resenas.AddRange(review1, review2, review3);
@@ -209,54 +207,10 @@ public class GamesIntegrationTests : IAsyncLifetime
 
         // Act
         var averageRating = await _dbContext.Resenas
-            .Where(r => r.JuegoId == game.Id && r.Activo)
-            .AverageAsync(r => r.Calificacion);
+            .Where(r => r.JuegoId == game.Id && r.Estado == EstadoResena.Activa)
+            .AverageAsync(r => r.Rating);
 
         // Assert
-        Assert.AreEqual(4.0, averageRating, 0.01);
-    }
-
-    [TestMethod]
-    [Description("Verifica que se puede desactivar un juego (soft delete)")]
-    public async Task DeactivateGame_ShouldMarkAsInactive()
-    {
-        // Arrange
-        var game = await _fixture.GetOrCreateTestGameAsync();
-
-        // Act
-        var gameToDeactivate = await _dbContext.Juegos
-            .FirstAsync(g => g.Id == game.Id);
-
-        gameToDeactivate.Activo = false;
-        await _dbContext.SaveChangesAsync();
-
-        // Assert
-        var deactivatedGame = await _dbContext.Juegos
-            .FirstAsync(g => g.Id == game.Id);
-
-        Assert.IsFalse(deactivatedGame.Activo);
-    }
-
-    [TestMethod]
-    [Description("Verifica que se pueden listar solo juegos activos")]
-    public async Task ListActiveGames_ShouldExcludeInactiveGames()
-    {
-        // Arrange
-        var activeGame = await _fixture.GetOrCreateTestGameAsync();
-
-        var inactiveGame = TestDataBuilder.CreateGame()
-            .WithActivo(false)
-            .Build();
-
-        _dbContext.Juegos.Add(inactiveGame);
-        await _dbContext.SaveChangesAsync();
-
-        // Act
-        var activeGames = await _dbContext.Juegos
-            .Where(g => g.Activo)
-            .ToListAsync();
-
-        // Assert
-        Assert.IsTrue(activeGames.All(g => g.Activo));
+        Assert.Equal(4.0, averageRating, 0.01);
     }
 }

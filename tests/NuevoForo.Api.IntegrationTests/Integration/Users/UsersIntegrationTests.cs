@@ -1,47 +1,44 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using NuevoForo.Api.IntegrationTests.Fixtures;
 using NuevoForo.Api.IntegrationTests.Helpers;
 using NuevoForo.Domain.Entities;
 using NuevoForo.Infrastructure.Data;
+using NuevoForo.Domain.Enums;
 
 namespace NuevoForo.Api.IntegrationTests.Integration.Users;
 
 /// <summary>
 /// Pruebas de integración para operaciones CRUD y relaciones de Usuarios.
 /// </summary>
-[TestClass]
-public class UsersIntegrationTests : IAsyncLifetime
+public class UsersIntegrationTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
 {
-    private DatabaseFixture _fixture = null!;
+    private readonly DatabaseFixture _fixture;
     private AppDbContext _dbContext = null!;
 
-    /// <summary>
-    /// Se ejecuta antes de cada prueba.
-    /// </summary>
+    public UsersIntegrationTests(DatabaseFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
     public async Task InitializeAsync()
     {
-        _fixture = new DatabaseFixture();
-        await _fixture.InitializeAsync();
         _dbContext = _fixture.DbContext;
+        await _fixture.ClearDatabaseAsync();
     }
 
-    /// <summary>
-    /// Se ejecuta después de cada prueba.
-    /// </summary>
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        await _fixture.DisposeAsync();
+        return Task.CompletedTask;
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede crear un usuario en la base de datos")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede crear un usuario en la base de datos")]
     public async Task CreateUser_WithValidData_ShouldPersistInDatabase()
     {
         // Arrange
         var user = TestDataBuilder.CreateUser()
             .WithNombre("Juan")
-            .WithApellido("Pérez")
             .WithEmail("juan.perez@test.com")
             .Build();
 
@@ -53,15 +50,14 @@ public class UsersIntegrationTests : IAsyncLifetime
         var userSaved = await _dbContext.Usuarios
             .FirstOrDefaultAsync(u => u.Id == user.Id);
 
-        Assert.IsNotNull(userSaved);
-        Assert.AreEqual("Juan", userSaved.Nombre);
-        Assert.AreEqual("Pérez", userSaved.Apellido);
-        Assert.AreEqual("juan.perez@test.com", userSaved.Email);
-        Assert.IsTrue(userSaved.Activo);
+        Assert.NotNull(userSaved);
+        Assert.Equal("Juan", userSaved.Nombre);
+        Assert.Equal("juan.perez@test.com", userSaved.Email);
+        Assert.Equal(EstadoUsuario.Activo, userSaved.Estado);
     }
 
-    [TestMethod]
-    [Description("Verifica que no se puede crear dos usuarios con el mismo email")]
+    [Fact]
+    [Trait("Description", "Verifica que no se puede crear dos usuarios con el mismo email")]
     public async Task CreateUser_WithDuplicateEmail_ShouldThrowException()
     {
         // Arrange
@@ -87,15 +83,15 @@ public class UsersIntegrationTests : IAsyncLifetime
         catch (Exception ex)
         {
             // Se espera una excepción de integridad
-            Assert.IsTrue(ex.InnerException?.Message.Contains("duplicate") || 
+            Assert.True(ex.InnerException?.Message.Contains("duplicate") == true || 
                          ex.Message.Contains("duplicate") ||
                          ex.Message.Contains("unique"), 
                          "Se esperaba una excepción de constratin UNIQUE");
         }
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede actualizar los datos de un usuario")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede actualizar los datos de un usuario")]
     public async Task UpdateUser_WithModifiedData_ShouldPersistChanges()
     {
         // Arrange
@@ -109,35 +105,34 @@ public class UsersIntegrationTests : IAsyncLifetime
             .FirstAsync(u => u.Id == user.Id);
 
         userToUpdate.Nombre = "Juan Actualizado";
-        userToUpdate.Apellido = "Pérez Actualizado";
         await _dbContext.SaveChangesAsync();
 
         // Assert
         var userVerified = await _dbContext.Usuarios
             .FirstAsync(u => u.Id == user.Id);
 
-        Assert.AreEqual("Juan Actualizado", userVerified.Nombre);
-        Assert.AreEqual("Pérez Actualizado", userVerified.Apellido);
+        Assert.Equal("Juan Actualizado", userVerified.Nombre);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede recuperar un usuario con sus reseñas relacionadas")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede recuperar un usuario con sus reseñas relacionadas")]
     public async Task GetUser_WithReviews_ShouldLoadRelatedEntities()
     {
         // Arrange
         var user = await _fixture.GetOrCreateTestUserAsync();
-        var game = await _fixture.GetOrCreateTestGameAsync();
+        var game1 = await _fixture.GetOrCreateTestGameAsync();
+        var game2 = await _fixture.GetOrCreateTestGameAsync();
 
         var review1 = TestDataBuilder.CreateReview()
             .WithUsuarioId(user.Id)
-            .WithJuegoId(game.Id)
-            .WithTitulo("Excelente juego")
+            .WithJuegoId(game1.Id)
+            .WithTexto("Excelente juego")
             .Build();
 
         var review2 = TestDataBuilder.CreateReview()
             .WithUsuarioId(user.Id)
-            .WithJuegoId(game.Id)
-            .WithTitulo("Muy divertido")
+            .WithJuegoId(game2.Id)
+            .WithTexto("Muy divertido")
             .Build();
 
         _dbContext.Resenas.AddRange(review1, review2);
@@ -149,12 +144,12 @@ public class UsersIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync(u => u.Id == user.Id);
 
         // Assert
-        Assert.IsNotNull(userWithReviews);
-        Assert.AreEqual(2, userWithReviews.Resenas?.Count);
+        Assert.NotNull(userWithReviews);
+        Assert.Equal(2, userWithReviews.Resenas?.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede recuperar un usuario con sus comentarios relacionados")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede recuperar un usuario con sus comentarios relacionados")]
     public async Task GetUser_WithComments_ShouldLoadRelatedEntities()
     {
         // Arrange
@@ -164,13 +159,13 @@ public class UsersIntegrationTests : IAsyncLifetime
         var comment1 = await _fixture.GetOrCreateTestCommentAsync(
             review: review,
             user: user,
-            contenido: "Comentario 1"
+            texto: "Comentario 1"
         );
 
         var comment2 = await _fixture.GetOrCreateTestCommentAsync(
             review: review,
             user: user,
-            contenido: "Comentario 2"
+            texto: "Comentario 2"
         );
 
         // Act
@@ -179,28 +174,25 @@ public class UsersIntegrationTests : IAsyncLifetime
             .FirstOrDefaultAsync(u => u.Id == user.Id);
 
         // Assert
-        Assert.IsNotNull(userWithComments);
-        Assert.AreEqual(2, userWithComments.Comentarios?.Count);
+        Assert.NotNull(userWithComments);
+        Assert.Equal(2, userWithComments.Comentarios?.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede buscar usuarios por nombre")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede buscar usuarios por nombre")]
     public async Task SearchUsers_ByNombre_ShouldReturnMatches()
     {
         // Arrange
         var user1 = TestDataBuilder.CreateUser()
             .WithNombre("Juan")
-            .WithApellido("Pérez")
             .Build();
 
         var user2 = TestDataBuilder.CreateUser()
             .WithNombre("Juan")
-            .WithApellido("García")
             .Build();
 
         var user3 = TestDataBuilder.CreateUser()
             .WithNombre("Carlos")
-            .WithApellido("López")
             .Build();
 
         _dbContext.Usuarios.AddRange(user1, user2, user3);
@@ -212,11 +204,11 @@ public class UsersIntegrationTests : IAsyncLifetime
             .ToListAsync();
 
         // Assert
-        Assert.AreEqual(2, juanUsers.Count);
+        Assert.Equal(2, juanUsers.Count);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede desactivar un usuario (soft delete)")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede desactivar un usuario (soft delete)")]
     public async Task DeactivateUser_ShouldMarkAsInactive()
     {
         // Arrange
@@ -226,25 +218,25 @@ public class UsersIntegrationTests : IAsyncLifetime
         var userToDeactivate = await _dbContext.Usuarios
             .FirstAsync(u => u.Id == user.Id);
 
-        userToDeactivate.Activo = false;
+        userToDeactivate.Estado = EstadoUsuario.Suspendido;
         await _dbContext.SaveChangesAsync();
 
         // Assert
         var deactivatedUser = await _dbContext.Usuarios
             .FirstAsync(u => u.Id == user.Id);
 
-        Assert.IsFalse(deactivatedUser.Activo);
+        Assert.Equal(EstadoUsuario.Suspendido, deactivatedUser.Estado);
     }
 
-    [TestMethod]
-    [Description("Verifica que se puede contar usuarios activos")]
+    [Fact]
+    [Trait("Description", "Verifica que se puede contar usuarios activos")]
     public async Task CountActiveUsers_ShouldReturnCorrectCount()
     {
         // Arrange
         var activeUser = await _fixture.GetOrCreateTestUserAsync();
 
         var inactiveUser = TestDataBuilder.CreateUser()
-            .WithActivo(false)
+            .WithEstado(EstadoUsuario.Suspendido)
             .Build();
 
         _dbContext.Usuarios.Add(inactiveUser);
@@ -252,10 +244,10 @@ public class UsersIntegrationTests : IAsyncLifetime
 
         // Act
         var activeCount = await _dbContext.Usuarios
-            .Where(u => u.Activo)
+            .Where(u => u.Estado == EstadoUsuario.Activo)
             .CountAsync();
 
         // Assert
-        Assert.IsTrue(activeCount >= 1);
+        Assert.True(activeCount >= 1);
     }
 }

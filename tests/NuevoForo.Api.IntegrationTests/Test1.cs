@@ -1,9 +1,8 @@
-﻿namespace NuevoForo.Api.IntegrationTests;
+namespace NuevoForo.Api.IntegrationTests;
 
-[TestClass]
 public sealed class Test1
 {
-    [TestMethod]
+    [Fact]
     public void TestMethod1()
     {
     }
